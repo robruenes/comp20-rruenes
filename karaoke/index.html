@@ -14,7 +14,54 @@
 <div id="lyrics"></div>
 
 <script>
-    // Complete this section and create a CSS file named style.css
+
+    function updateLyrics() {
+        var video = document.getElementsByTagName("video")[0];
+        var lyrics = document.getElementById("lyrics");
+        if (video.currentTime < 5.0) {
+            return;
+        } else if (video.currentTime < 36.0) {
+            lyrics.innerHTML = "<p>Oh, I could hide 'neath the wings<br/>" +
+                                "Of the bluebird as she sings<br/>" +
+                                "The six o'clock alarm would never ring.<br/>" +
+                                "But it rings and I rise,<br/>" +
+                                "Wipe the sleep out of my eyes.<br/>" +
+                                "My shavin' razor's cold and it stings.</p>"
+        } else if (video.currentTime < 54.0) {
+            lyrics.innerHTML = "<img src=\"ldog.jpg\" alt=\"laughing dog\"/>" +
+                               "<p>Cheer up, Sleepy Jean.<br/>" +
+                               "Oh, what can it mean.<br/>" +
+                               "To a daydream believer<br/>" +
+                               "And a homecoming queen.</p>"
+        } else if (video.currentTime < 83.0) {
+            lyrics.innerHTML = "<p>You once thought of me<br/>" +
+                               "As a white knight on a steed.<br/>" +
+                               "Now you know how happy I can be.<br/>" +
+                               "Oh, and our good times start and end<br/>" +
+                               "Without dollar one to spend.<br/>" +
+                               "But how much, baby, do we really need.</p>"
+        } else if (video.currentTime < 120.0) {
+            lyrics.innerHTML = "<p>Cheer up, Sleepy Jean.<br/>" +
+                               "Oh, what can it mean.<br/>" +
+                               "To a daydream believer<br/>" +
+                               "And a homecoming queen.<br/>" +
+                               "Cheer up, Sleepy Jean.<br/>" +
+                               "Oh, what can it mean.<br/>" +
+                               "To a daydream believer<br/>" +
+                               "And a homecoming queen.</p>"
+        } else if (video.currentTime < 128.0) {
+            lyrics.innerHTML = "<p>[Instrumental interlude]</p>" +
+                               "<img src=\"mike.png\" alt=\"mike\"/>"
+        } else {
+            lyrics.innerHTML = "<p>Cheer up, Sleepy Jean.<br/>" +
+                               "Oh, what can it mean.<br/>" +
+                               "To a daydream believer<br/>" +
+                               "And a homecoming queen.<br/>" +
+                               "[Repeat and fade]</p>"
+        }
+    }
+    var v = document.getElementsByTagName("video")[0];
+    v.addEventListener('timeupdate', updateLyrics, false);
 </script>
 </body>
 </html>
