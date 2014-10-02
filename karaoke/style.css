@@ -1,0 +1,15 @@
+#title{
+    font-family: arial, verdana, helvetica, sans-serif;
+    font-style: italic;
+    text-align: center;
+}
+
+video {
+   display: block;
+    margin: 0 auto;
+}
+
+#lyrics{
+    font-family: arial, verdana, helvetica, sans-serif;
+    text-align: center;
+}
