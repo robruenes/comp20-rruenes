@@ -144,6 +144,16 @@
             });
         }
 
+        function sortDistances() {
+            return distances.sort(function (a, b) {
+                var distA = a["distance"];
+                var distB = b["distance"];
+                if (distA < distB) return -1;
+                if (distA > distB) return 1;
+                return 0;
+            });
+        }
+
         function renderMap() {
             me = new google.maps.LatLng(currLat, currLng);
             map.panTo(me);
@@ -169,6 +179,7 @@
             });
 
             drawPolyLines();
+            distances = sortDistances();
         }
 
         function getDatastoreData() {
