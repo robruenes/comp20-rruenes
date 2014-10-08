@@ -9,32 +9,49 @@
     <link rel="stylesheet" href="style.css" />
 
     <script>
+        var map;
+        var characters;
+        var students;
+        var charPositions = [];
         var currLat = 0;
         var currLng = 0;
         var login = "ButtersStotch";
         var xmlhttp = new XMLHttpRequest();
-
-        xmlhttp.onreadystatechange = function() {
-            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                alert(xmlhttp.responseText);
-            }
-        };
-
+        var infowindow = new google.maps.InfoWindow();
         var me = new google.maps.LatLng(currLat, currLng);
         var myOptions = {
             zoom: 14,
             center: me,
             mapTypeId: google.maps.MapTypeId.ROADMAP
         };
-        var map;
-        var marker;
-        var infowindow = new google.maps.InfoWindow();
-        var places;
+
+        xmlhttp.onreadystatechange = function() {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                var responseJSON = JSON.parse(xmlhttp.responseText);
+                characters = responseJSON["characters"];
+                students = responseJSON["students"];
+                renderMap();
+            }
+        };
 
         function init()
         {
             map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
             getMyLocation();
+        }
+
+        function drawPolyLines() {
+            for (var i = 0; i < charPositions.length; i++) {
+                var linePath = [me, charPositions[i]];
+                var line = new google.maps.Polyline({
+                    path:linePath,
+                    geodisc: true,
+                    strokeColor: "#FF0000",
+                    stokeOpacity: 1.0,
+                    strokeWeight: 2
+                });
+                line.setMap(map);
+            }
         }
 
         function getMyLocation()
@@ -43,7 +60,6 @@
                 navigator.geolocation.getCurrentPosition(function(position) {
                     currLat = position.coords.latitude;
                     currLng = position.coords.longitude;
-                    renderMap();
                     getDatastoreData();
                 });
             }
@@ -52,27 +68,81 @@
             }
         }
 
-        function renderMap() {
-            me = new google.maps.LatLng(currLat, currLng);
+        function addCharacterToMap(character) {
+            var lat = character["loc"]["latitude"];
+            var lng = character["loc"]["longitude"];
+            var note = character["loc"]["note"];
+            var name = character["name"];
+            var charPos = new google.maps.LatLng(lat, lng);
+            charPositions = charPositions.concat(charPos);
+            var titleString = "Name: " + name + " Lat: " + lat + " Lng: " + lng + " Note: " + note
 
-            map.panTo(me);
-
-            marker = new google.maps.Marker({
-                position: me,
-                title: "It's Rob!!"
+            var marker = new google.maps.Marker({
+                map: map,
+                position: charPos,
+                title: titleString,
+                icon: "icons/" + name + ".png"
             });
-            marker.setMap(map);
 
             google.maps.event.addListener(marker, 'click', function() {
+                infowindow.close();
                 infowindow.setContent(marker.title);
-                infowindow.open(map, marker);
+                infowindow.open(map, this);
             });
+        }
+
+        function addStudentToMap(student) {
+            var lat = student["lat"];
+            var lng = student["lng"];
+            var name = student["login"];
+            var timestamp = student["created_at"];
+            var studentPos = new google.maps.LatLng(lat, lng);
+            var titleString =  "Name: " + name + " Lat: " + lat + " Lng: " + lng + " Created at: " + timestamp;
+
+            var marker = new google.maps.Marker({
+                map: map,
+                position: studentPos,
+                title: titleString,
+                icon: 'icons/student.png'
+            });
+
+            google.maps.event.addListener(marker, 'click', function() {
+                infowindow.close();
+                infowindow.setContent(marker.title);
+                infowindow.open(map, this);
+            });
+        }
+
+        function renderMap() {
+            me = new google.maps.LatLng(currLat, currLng);
+            map.panTo(me);
+
+            for (var i = 0; i < students.length; i++) {
+                addStudentToMap(students[i]);
+            }
+
+            for (var i = 0; i < characters.length; i++) {
+                addCharacterToMap(characters[i]);
+            }
+
+            var myMarker = new google.maps.Marker({
+                position: me,
+                title: "It's me!",
+                icon: 'icons/me.png'
+            });
+            myMarker.setMap(map);
+
+            google.maps.event.addListener(myMarker, 'click', function() {
+                infowindow.setContent(myMarker.title);
+                infowindow.open(map, myMarker);
+            });
+
+            drawPolyLines();
         }
 
         function getDatastoreData() {
             var datastoreURL = "http://chickenofthesea.herokuapp.com/sendLocation";
             var params = "login=" + login + "&lat=" + currLat + "&lng=" + currLng;
-            alert(params);
             xmlhttp.open("POST", datastoreURL, true);
             xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
             xmlhttp.send(params);
