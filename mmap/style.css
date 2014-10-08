@@ -9,6 +9,13 @@ body {
 }
 
 #map_canvas {
-    width: 100%;
+    width: 80%;
     height: 100%;
+    float: left;
+}
+
+#distance_info {
+    font-family: "Arial";
+    font-size: 15px;
+    text-align: center;
 }
