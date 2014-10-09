@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>MBTA Line</title>
+    <meta name="viewport" content="initial-scale=1.0" />
+    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+    <link rel="stylesheet" href="style.css" />
+
+    <script>
+        var map;
+        var trains;
+        var xmlhttp = new XMLHttpRequest();
+        var currLat = 0;
+        var currLng = 0;
+        var infowindow = new google.maps.InfoWindow();
+        var me = new google.maps.LatLng(currLat, currLng);
+        var myOptions = {
+            zoom: 14,
+            center: me,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+
+        /*xmlhttp.onreadystatechange = function() {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                var responseJSON = JSON.parse(xmlhttp.responseText);
+                console.log(responseJSON);
+                var trains = responseJSON["TripList"]["Trips"];
+                renderMap();
+            }
+        };*/
+
+        function getMyLocation()
+        {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    currLat = position.coords.latitude;
+                    currLng = position.coords.longitude;
+                    renderMap();
+                });
+            } else {
+                alert("Sorry! No geolocation support in your browser!");
+                renderMap();
+            }
+        }
+
+        function init()
+        {
+            map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+            getMyLocation();
+        }
+
+        /*function addTrainToMap(train) {
+            var lat = train["Position"]["Lat"];
+            var lng = train["Position"]["Long"];
+
+            var trainPos = new google.maps.LatLng(lat, lng);
+
+            var marker = new google.maps.Marker({
+                map: map,
+                position: trainPos,
+            });
+        }*/
+
+        function renderMap() {
+            me = new google.maps.LatLng(currLat, currLng);
+            map.panTo(me);
+
+            /*for (var i = 0; i < trains.length; i++) {
+                addTrainToMap(trains[i]);
+            }*/
+        }
+
+        function getMBTAData() {
+            var mbtaURL = "http://developer.mbta.com/lib/rthr/red.json";
+            xmlhttp.open("GET", mbtaURL, true);
+            xmlhttp.setRequestHeader("Content-type", "application/json");
+            xmlhttp.send();
+        }
+
+    </script>
+</head>
+<body onload="init()">
+<div id="map_canvas"></div>
+</body>
+</html>
