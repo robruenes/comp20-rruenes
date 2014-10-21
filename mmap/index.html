@@ -32,7 +32,9 @@
                 var responseJSON = JSON.parse(xmlhttp.responseText);
                 characters = responseJSON["characters"];
                 students = responseJSON["students"];
-                renderMap();
+                renderDataStoreData();
+                renderDistances();
+                renderMyDataPoint();
             }
         };
 
@@ -77,18 +79,19 @@
             }
         }
 
+        function toRadians(number) {
+            return number * Math.PI / 180;
+        }
+
         function calculateDistance(character, charLat, charLng) {
-            Number.prototype.toRad = function() {
-                return this * Math.PI / 180;
-            };
 
             var R = 6371; // kilometers.
             var x1 = currLat - charLat;
-            var dLat = x1.toRad();
+            var dLat = toRadians(x1);
             var x2 = currLng-charLng;
-            var dLon = x2.toRad();
+            var dLon = toRadians(x2);
             var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                    Math.cos(charLat.toRad()) * Math.cos(currLat.toRad()) *
+                    Math.cos(toRadians(charLat)) * Math.cos(toRadians(currLat)) *
                     Math.sin(dLon/2) * Math.sin(dLon/2);
             var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
             var d = R * c;
@@ -101,6 +104,8 @@
             distances = distances.concat(distanceObj);
         }
 
+
+
         function addCharacterToMap(character) {
             var lat = character["loc"]["latitude"];
             var lng = character["loc"]["longitude"];
@@ -109,7 +114,7 @@
             var charPos = new google.maps.LatLng(lat, lng);
             charPositions = charPositions.concat(charPos);
             calculateDistance(character, lat, lng);
-            var titleString = "Name: " + name + " Lat: " + lat + " Lng: " + lng + " Note: " + note
+            var titleString = "Name: " + name + " Lat: " + lat + " Lng: " + lng + " Note: " + note;
 
             var marker = new google.maps.Marker({
                 map: map,
@@ -157,7 +162,7 @@
             });
         }
 
-        function renderMap() {
+        function renderDataStoreData() {
             me = new google.maps.LatLng(currLat, currLng);
             map.panTo(me);
 
@@ -168,6 +173,9 @@
             for (var j = 0; j < characters.length; j++) {
                 addCharacterToMap(characters[j]);
             }
+        }
+
+        function renderMyDataPoint() {
 
             var myMarker = new google.maps.Marker({
                 position: me,
@@ -180,7 +188,9 @@
                 infowindow.setContent(myMarker.title);
                 infowindow.open(map, myMarker);
             });
+        }
 
+        function renderDistances () {
             drawPolyLines();
             distances = sortDistances();
             writeDistances();
@@ -193,6 +203,7 @@
             xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
             xmlhttp.send(params);
         }
+
     </script>
 </head>
 <body onload="init()">
