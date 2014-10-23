@@ -7,8 +7,29 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script>
         $(document).ready(function() {
+
+            var oldKeys = [];
+            for (key in localStorage) {
+                oldKeys.push(key);
+            }
+
+            oldKeys.sort(function (x, y) {
+                var dateX = new Date(x);
+                var dateY = new Date(y);
+                return dateX < dateY ? -1 : dateX > dateY ? 1 : 0;
+            });
+
+            for (var i = 0; i < oldKeys.length; i++) {
+                var key = oldKeys[i];
+                console.log(key);
+                console.log(localStorage[key]);
+                $('div#news').after(localStorage[key]);
+            }
+
             $('input').on('change', function() {
-                var log = '<p>' + new Date() + ' - ' + $(this).val() + '</p>';
+                var dateStr = new Date() + '';
+                var log = '<p>' + dateStr + ' - ' + $(this).val() + '</p>';
+                localStorage[dateStr] = log;
                 $('div#news').after(log);
             });
         });
