@@ -6,7 +6,12 @@
     <title>My News Feed</title>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script>
-        // Most of your work will be done here...
+        $(document).ready(function() {
+            $('input').on('change', function() {
+                var log = '<p>' + new Date() + ' - ' + $(this).val() + '</p>';
+                $('div#news').after(log);
+            });
+        });
     </script>
 </head>
 
