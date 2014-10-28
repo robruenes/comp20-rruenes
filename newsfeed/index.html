@@ -21,8 +21,6 @@
 
             for (var i = 0; i < oldKeys.length; i++) {
                 var key = oldKeys[i];
-                console.log(key);
-                console.log(localStorage[key]);
                 $('div#news').after(localStorage[key]);
             }
 
