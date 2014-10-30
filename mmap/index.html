@@ -30,6 +30,7 @@
         xmlhttp.onreadystatechange = function() {
             if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
                 var responseJSON = JSON.parse(xmlhttp.responseText);
+                console.log(responseJSON);
                 characters = responseJSON["characters"];
                 students = responseJSON["students"];
                 renderDataStoreData();
@@ -191,7 +192,9 @@
         }
 
         function getDatastoreData() {
-            var datastoreURL = "http://chickenofthesea.herokuapp.com/sendLocation";
+            //var datastoreURL = "http://chickenofthesea.herokuapp.com/sendLocation";
+            //var datastoreURL = "https://limitless-garden-1242.herokuapp.com/sendLocation";
+            var datastoreURL = "http://localhost:3000/sendLocation";
             var params = "login=" + login + "&lat=" + currLat + "&lng=" + currLng;
             xmlhttp.open("POST", datastoreURL, true);
             xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
