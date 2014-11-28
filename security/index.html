@@ -14,32 +14,38 @@
 <h2>Abstract of Findings</h2>
 <h2>Issues Found</h2>
 <ol>
-    <li>HTML/Javascript Injection in Where In The World
+    <li>XSS in Where In The World</li>
         <ul>
             <li>This issue was found on the home page of the Where in the World Project - sending in html and javascript when doing a POST to the sendLocation route ended up embedding those scripts in the home page.</li>
             <li>Risk: High. This vulnerability can allow anybody to change the content of the page by code to embed videos, redirecting the page, etc.</li>
             <li>Description: There is no data validation on the data from the POST, as shown in the code below. Because of this,
                 somebody can send a script tag with valid javascript as the login parameter to the HTTP post, and that code ends
-                up getting executed when the page loads. The issue was found simply by trying to inject HTML into the application.</li>
-            <li><a href="firstattack.png">Screenshot of Injected HTML</a></li>
-            <li><a href="firstcode.png">Screenshot of the problematic code</a></li>
-            <li>An easy resolution is to scan all of the input that comes from the HTTP POST and make sure to remove any angle brackets that could be used to create a script tag. <a href="htmlstrip.png">This</a> code accomplishes this goal.</li>
+                up getting executed when the page loads. The issue was found simply by trying to inject HTML into the application.</br></li>
+            <li><a href="imgs/firstattack.png">Screenshot of Injected HTML</a></li>
+            <li><a href="imgs/firstcode.png">Screenshot of the problematic code</a></li>
+            <li>An easy resolution is to scan all of the input that comes from the HTTP POST and make sure to remove any angle brackets or ampersands that could be used to create a script tag. <a href="htmlstrip.png">This</a> code accomplishes this goal.</li>
         </ul>
-    </li>
+    
 
-    <li>HTML/Javascript Injection in the Marauder's Map via Character Notes</li>
+    <li>XSS in the Marauder's Map via Character Notes</li>
         <ul>
             <li>This issue was found in the map markers in the Marauder's Map Project. The application accepts results from the
                 database it POSTs to without doing any verification on the returned result.</li>
             <li>Risk: High, for the same reasons as the previous issue.
                 Initially, this was a medium risk issue because I was unable to get JavaScript to execute through the
                 character markers from script tags. Although I'm not entirely sure why this is the case, I feel it may be possible that the Google infowindow.setContent function may not allow script tags in the input string. With that being the case, the worst someone could do to this application would be inject HTML. However, I realized that a script tag was not the only way to inject JavaScript into a page, and I was able to get code to execute by adding it to the "onerror" attribute of a broken image tag.</li>
-            <li>Description: When information is returned to the Marauder's Map, characters are drawn onto the map with info windows that contain a note, which is supposed to be a string of text. However, there is no validation on this text string, and as such it is possible to get unexpected HTML and JavaScript in those marker boxes. I discovered the issue after looking at the code and noticing that no validation occurs on the result from the server. After a few attempts I thought I would only be able to inject HTML, but later realized I could <a href="mongoinjection.png">inject the code through the onerror attribute of an image tag.</a></li>
-            <li>Screenshots of <a href="secondattack.png">Injected HTML</a> and <a href="secondjs.png">JavaScript</a></li>
-            <li><a href="secondcode.png">Screenshot of problematic code</a></li>
-            <li>The <a href="htmlstrip.png">same function</a> used to solve the problem in Where in the World rectifies this issue.</li>
+            <li>Description: When information is returned to the Marauder's Map, characters are drawn onto the map with info windows that contain a note, which is supposed to be a string of text. However, there is no validation on this text string, and as such it is possible to get unexpected HTML and JavaScript in those marker boxes. I discovered the issue after looking at the code and noticing that no validation occurs on the result from the server. After a few attempts I thought I would only be able to inject HTML, but later realized I could <a href="imgs/mongoinjection.png">inject the code through the onerror attribute of an image tag.</a></li>
+            <li>Screenshots of <a href="imgs/secondattack.png">Injected HTML</a> and <a href="imgs/secondjs.png">JavaScript</a></li>
+            <li><a href="imgs/secondcode.png">Screenshot of problematic code</a></li>
+            <li>The <a href="imgs/htmlstrip.png">same function</a> used to solve the problem in Where in the World rectifies this issue.</li>
         </ul>
-    <li>3</li>
+    <li>Inclusion of Mongo Object IDs in Return from locations.json Route</li>
+        <ul>
+        <li>This issue was identified in the locations.json route of the Where in the World project.</li>
+        <li>Risk: Medium. In and of itself, returning back the primary object ID for Mongo objects doesn't really affect client code dependent on the json, because that client code should be explicitly parsing out the lat and lng fields. However, I believe the inclusion of this field in the return result is problematic because it exposes the fact that there is a MongoDB instance on the server backend that is being used to store information. In all software engineering, unnecessary information should be hidden and abstracted away, but the inclusion of this field in the returned JSON is clearly a leaky abstraction - details about the implementation of the web service have leaked through to the client. With this extra knowledge, a malicious user who was previously uncertain about how to attack a website now knows about the Mongo instance in the backend and can focus on attacks that specifically target the database.</li>
+        <li>Description: Any query to the locations.json route returns back JSON objects that contain the Mongo object ID as a field. <a href="imgs/leakyabstraction.png">Here is a screenshot for proof.</a></li>
+        <li>This is an easily rectifiable issue. The response JSON just needs to be <a href="imgs/construction.png">explicitly constructed</a> from the MongoDB result <a href="imgs/jsonfixed.png">as to leave out the object ID.</a></li>
+    </ul>
     <li>4</li>
 </ol>
 <h2>Conclusions</h2>
