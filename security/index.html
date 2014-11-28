@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Marauder's Map and Where In The World Security Assessment</title>
+    <link rel="stylesheet" href="style.css" type="text/css"/>
+</head>
+<body>
+<h1>Security Assessment of Marauder's Map and Where In The World</h1>
+<h2>Introduction</h2>
+<p>This assessment tests the security of the <a href="http://tuftsdev.github.io/WebProgramming/assignments/a2.html">Marauder's Map</a> and <a href="http://tuftsdev.github.io/WebProgramming/assignments/a3.html">Where In The World</a> projects developed by Shaylynn Reilly for Web Programming at Tufts in the Fall 2014 Semester. The Marauder's Map POSTs a user's geolocation to a backend server, and then draws the locations it receives as a response on a Google Map. The Where In The World Project has several routes that return information from a MongoDB to the user, and allows one to POST a geolocation to it - it is capable of acting as the backend to the Marauder's Map assignment.</p>
+<p>When not carefully implemented, each of these assignments can easily contain security holes that would keep them from being suitable for public use, so this assessment aims to highlight what changes can be made to these assignments to make them more robust and secure.</p>
+<h2>Methodology</h2>
+<p>My first attempts at discovering vulnerabilities were carried out through "black-box" testing. Following this round of testing, I carried out "white-box" testing, by looking through the source code of both assignments and carrying out attacks after I felt I found a possible vulnerability. I had locally running versions of both the server and client code (so I could test different XSS attacks and be able to remove database entries that caused them), and used curl to do HTTP POSTs from the command line. Additionally, I used the Mongo command line tool to manually insert entries that I thought would cause vulnerabilities, although these entries could have just been POSTed with curl.</p>
+<h2>Abstract of Findings</h2>
+<p>Overall, both projects had many opportunities for Cross-Site-Scripting (XSS). In layman's terms, a person with malicious intent would be able to send code to the server because the server never did any checks to ensure people didn't send it code, and due to this neglect, both the server itself and clients that depend on it could be vulnerable to this malicious code. In addition, there was one particular issue that could let a user realize MongoDB is being used on the backend, revealing implementation details that could allow them to make specific attacks targeting MongoDB.</p>
+<h2>Issues Found</h2>
+<ol>
+    <li>XSS in Where In The World</li>
+        <ul>
+            <li>This issue was found on the home page of the Where in the World Project - sending in html and javascript when doing a POST to the sendLocation route ended up embedding those scripts in the home page.</li>
+            <li>Risk: High. This vulnerability can allow anybody to change the content of the page by code to embed videos, redirecting the page, etc.</li>
+            <li>Description: There is no data validation on the data from the POST, as shown in the code below. Because of this,
+                somebody can send a script tag with valid javascript as the login parameter to the HTTP POST, and that code ends
+                up getting executed when the page loads. The issue was found simply by trying to inject HTML into the application.</br></li>
+            <li><a href="imgs/firstattack.png">Screenshot of Injected HTML</a></li>
+            <li><a href="imgs/firstcode.png">Screenshot of the problematic code</a></li>
+            <li>An easy resolution is to scan all of the input that comes from the HTTP POST and make sure to remove any angle brackets or ampersands that could be used to create a script tag. <a href="htmlstrip.png">This</a> code accomplishes this goal.</li>
+        </ul>   
+
+    <li>XSS in the Marauder's Map via Character Notes</li>
+        <ul>
+            <li>This issue was found in the map markers in the Marauder's Map Project. The application accepts results from the
+                database it POSTs to without doing any verification on the returned result.</li>
+            <li>Risk: High, for the same reasons as the previous issue.
+                Initially, this was a medium risk issue because I was unable to get JavaScript to execute through the
+                character markers from script tags. Although I'm not entirely sure why this is the case, I feel it may be possible that the Google infowindow.setContent function may not allow script tags in the input string. With that being the case, the worst someone could do to this application would be inject HTML. However, I realized that a script tag was not the only way to inject JavaScript into a page, and I was able to get code to execute by adding it to the "onerror" attribute of a broken image tag.</li>
+            <li>Description: When information is returned to the Marauder's Map, characters are drawn onto the map with info windows that contain a note, which is supposed to be a string of text. However, there is no validation on this text string, and as such it is possible to get unexpected HTML and JavaScript in those marker boxes. I discovered the issue after looking at the code and noticing that no validation occurs on the result from the server. After a few attempts I thought I would only be able to inject HTML, but later realized I could <a href="imgs/mongoinjection.png">inject the code through the onerror attribute of an image tag.</a></li>
+            <li>Screenshots of <a href="imgs/secondattack.png">Injected HTML</a> and <a href="imgs/secondjs.png">JavaScript</a></li>
+            <li><a href="imgs/secondcode.png">Screenshot of problematic code</a></li>
+            <li>The <a href="imgs/htmlstrip.png">same function</a> used to solve the problem in Where in the World rectifies this issue.</li>
+        </ul>
+
+    <li>(X)XSS in Marauder's Map Student Logins</li>
+        <ul>
+            <li>Again, an XSS issue is found in the Marauder's Map because of a lack of data sanitation. This time, student
+                logins aren't checked to see if they contain HTML, so JavaScript can be injected into student map markers.</li>
+            <li>Risk: High. Once again, vulnerabilities in XSS are terrible. However, this is arguably worse than the issue
+                with character notes. Clients have no way to add or modify characters, so realistically someone would need
+                access to the server's source code to inject JavaScript into client code that way, unless they discovered a vulnerability which lets them add characters. Currently, characters aren't stored in the MongoDB instance, so this is not possible. However, given the fact that a malicious entity could inject scripts into the Where In The World database that get executed on its homepage, they would very quickly realize that the lack of sanitation on the server side would lead to the same scripts being executed in any client code that trusts the server to sanitize what gets POSTed to it. This is a huge mistake, and we see that JS gets executed on student markers in the Marauder's Map due to a lack of sanitizing.</li>
+            <li>Description: The Marauder's Map trusts that student login information will not contain HTML. Due to this misstep, JS can be executed when a user clicks on these markers. <a href="imgs/studentlogin.png">Here's the proof.</a></li>
+            <li><a href="imgs/thirdcode.png">Here's the code that didn't sanitize the results.</a></li>
+            <li><a href="imgs/htmlstrip.png">This function can be used yet again.</a></li>
+        </ul>
+
+    <li>Inclusion of Mongo Object IDs in Return from locations.json Route</li>
+        <ul>
+        <li>This issue was identified in the locations.json route of the Where in the World project.</li>
+        <li>Risk: Medium. In and of itself, returning back the primary object ID for Mongo objects doesn't really affect client code dependent on the json, because that client code should be explicitly parsing out the lat and lng fields. However, I believe the inclusion of this field in the return result is problematic because it exposes the fact that there is a MongoDB instance on the server backend that is being used to store information. In all software engineering, unnecessary information should be hidden and abstracted away, but the inclusion of this field in the returned JSON is clearly a leaky abstraction - details about the implementation of the web service have leaked through to the client. With this extra knowledge, a malicious user who was previously uncertain about how to attack a website now knows about the Mongo instance in the backend and can focus on attacks that specifically target the database.</li>
+        <li>Description: Any query to the locations.json route returns back JSON objects that contain the Mongo object ID as a field. <a href="imgs/leakyabstraction.png">Here is a screenshot for proof.</a></li>
+        <li>This is an easily rectifiable issue. The response JSON just needs to be <a href="imgs/construction.png">explicitly constructed</a> from the MongoDB result <a href="imgs/jsonfixed.png">as to leave out the object ID.</a></li>
+    </ul>
+    <li>BONUS: Lack of application/json header in locations.json route</li>
+        <ul>
+            <li>This is less of a security issue and moreso poor programming practice. The response header from the locations.json route <a href="imgs/headerproof.png">claims that the content is "text/html"</a>, when it should be "application/json".</li>
+            <li>Risk: Low. This is really just poor programming practic, and would be an issue for clients who rely on these headers to be accurate.</li>
+            <li>Description: Self-explanatory. The wrong header is sent back because it <a href="imgs/noheader.png">is not explicitly set in the server code.</a></li>
+            <li>The solution is to just <a href="imgs/withheader.png">add the header info.</a></li>
+        </ul>
+</ol>
+<h2>Conclusions</h2>
+<p>By and large, issues with XSS due to a lack of data sanitation is the biggest concern across these two applications. Luckily, it is not very hard to resolve these issues, as it really just involves a single function call by both the server and client to clean up any data it receives. Once these fixes are in place, a follow up can be conducted to find other issues with these applications.</p>
+</body>
+</html>
