@@ -22,9 +22,9 @@
             <li>Description: There is no data validation on the data from the POST, as shown in the code below. Because of this,
                 somebody can send a script tag with valid javascript as the login parameter to the HTTP POST, and that code ends
                 up getting executed when the page loads. The issue was found simply by trying to inject HTML into the application.</br></li>
-            <li><a href="imgs/firstattack.png">Screenshot of Injected HTML</a></li>
+            <li><a href="imgs/firstattack.png">Screenshot of Injected HTML/JS</a></li>
             <li><a href="imgs/firstcode.png">Screenshot of the problematic code</a></li>
-            <li>An easy resolution is to scan all of the input that comes from the HTTP POST and make sure to remove any angle brackets or ampersands that could be used to create a script tag. <a href="htmlstrip.png">This</a> code accomplishes this goal.</li>
+            <li>An easy resolution is to scan all of the input that comes from the HTTP POST and make sure to remove any angle brackets or ampersands that could be used to create a script tag. <a href="imgs/htmlstrip.png">This</a> code accomplishes this goal.</li>
         </ul>   
 
     <li>XSS in the Marauder's Map via Character Notes</li>
